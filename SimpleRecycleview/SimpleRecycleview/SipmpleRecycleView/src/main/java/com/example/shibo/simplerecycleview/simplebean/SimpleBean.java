@@ -5,17 +5,18 @@ package com.example.shibo.simplerecycleview.simplebean;
  */
 
 public class SimpleBean {
-    boolean isHeadOrFoot;
+   //0表示是空白的  -1，-2表示是头和尾，1表示是正常的
+    int beanType;
 
-    public boolean isHeadOrFoot() {
-        return isHeadOrFoot;
+    public int getBeanType() {
+        return beanType;
     }
 
-    public void setHeadOrFoot(boolean headOrFoot) {
-        isHeadOrFoot = headOrFoot;
+    public void setBeanType(int beanType) {
+        this.beanType = beanType;
     }
 
     public SimpleBean() {
-        this.isHeadOrFoot=false;
+        this.beanType = 1;
     }
 }

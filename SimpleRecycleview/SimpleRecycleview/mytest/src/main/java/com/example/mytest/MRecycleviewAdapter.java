@@ -24,7 +24,7 @@ public class MRecycleviewAdapter extends SimpleRecycleviewAdater{
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         /*重写该方法，在viewType等于1的时候，写入自己的viewholder*/
         if(viewType==1){
-            View view= LayoutInflater.from(mContext).inflate(com.example.shibo.simplerecycleview.R.layout.item,null);
+            View view= LayoutInflater.from(mContext).inflate(R.layout.item,null);
             RecyclerView.LayoutParams layoutParams=new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
             layoutParams.height= (int) (MyUtils.getHeight(mContext)*0.1);
             view.setLayoutParams(layoutParams);

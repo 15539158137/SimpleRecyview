@@ -17,13 +17,21 @@ public class SimpleRecycleviewItemDe extends RecyclerView.ItemDecoration{
 
     @Override
     public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
-        outRect.left = space;
-        outRect.right = space;
-        outRect.bottom = space;
+//        outRect.left = space;
+//        outRect.right = space;
+
+        SimpleRecycleview recycleview = (SimpleRecycleview) parent;
+        SimpleRecycleviewAdater simpleRecycleviewAdater = (SimpleRecycleviewAdater) recycleview.getAdapter();
+        if(simpleRecycleviewAdater.mList.get(parent.getChildPosition(view)).getBeanType()==-2){
+            //表示这是个底部的，不需要设置底部间距
+        }else {
+            outRect.bottom = space;
+        }
+
         if(parent.getChildPosition(view) != 0){
             outRect.top = space;
         }else {
-            outRect.top=space/2;
+
         }
     }
 }
