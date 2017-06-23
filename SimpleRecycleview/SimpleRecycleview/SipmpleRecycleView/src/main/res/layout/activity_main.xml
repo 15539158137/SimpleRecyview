@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.shibo.simplerecycleview.MainActivity">
+
+<com.example.shibo.simplerecycleview.recycleview.SimpleRecycleview
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/recycleview"
+    android:layout_above="@+id/button"></com.example.shibo.simplerecycleview.recycleview.SimpleRecycleview>
+<Button
+    android:text="ADD"
+    android:id="@+id/button"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_alignParentBottom="true"
+    />
+</RelativeLayout>
