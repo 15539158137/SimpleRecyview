@@ -6,7 +6,7 @@
 
 1.常规使用：xml、间距、刷新加载布局更改等
 
-1.关于adapter
+1.关于adapter;adapter中已经有变量mContext和数据集合mList,
 
   //设置刷新和加载的监听
 
