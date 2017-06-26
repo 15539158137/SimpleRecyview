@@ -3,7 +3,7 @@
 使用方法：
 1.关于adapter：
   继承 SimpleRecycleviewAdater
-  重写onBindViewHolder：\br
+  重写onBindViewHolder：
  @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         super.onBindViewHolder(holder, position);
