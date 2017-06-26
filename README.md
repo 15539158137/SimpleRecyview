@@ -4,21 +4,30 @@
 1.关于adapter：
   继承 SimpleRecycleviewAdater
   重写onBindViewHolder：
-  if(mList.get(position).getBeanType()==1){
-        MyViewHolder myViewHold= (MyViewHolder) holder;
-        myViewHold.textView.setText("第"+position+"位置数据");
+ @Override
+    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+        super.onBindViewHolder(holder, position);
+        if (mList.get(position).getBeanType() == 1) {
+            MyViewHolder myViewHold = (MyViewHolder) holder;
+            myViewHold.textView.setText("第" + position + "位置数据");
+        }
     }
   重写onCreateViewHolder：
-    if(viewType==1){
+   @Override
+    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        /*重写该方法，在viewType等于1的时候，写入自己的viewholder*/
+        if(viewType==1){
             View view= LayoutInflater.from(mContext).inflate(R.layout.item,null);
-            RecyclerView.LayoutParams layoutParams=new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,       ViewGroup.LayoutParams.MATCH_PARENT);
+            RecyclerView.LayoutParams layoutParams=new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
             layoutParams.height= (int) (MyUtils.getHeight(mContext)*0.1);
             view.setLayoutParams(layoutParams);
             return new MyViewHolder(view);
         }else {
         return super.onCreateViewHolder(parent, viewType);
         }
-        
+    } 
+
+
 2.关于bean类
   继承SimpleBean
 3.关于  Recycleview
