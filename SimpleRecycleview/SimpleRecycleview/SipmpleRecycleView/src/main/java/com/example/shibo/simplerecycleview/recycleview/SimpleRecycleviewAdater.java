@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.example.shibo.simplerecycleview.R;
 import com.example.shibo.simplerecycleview.simplebean.SimpleBean;
@@ -69,7 +70,7 @@ public void setHeadView(View headView1){
             RecyclerView.LayoutParams layoutParams = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
             layoutParams.height = (int) (MyUtils.getHeight(mContext) * 0.1);
             view.setLayoutParams(layoutParams);
-            return new SimpleViewHolder(view);
+            return new SimpleViewHolderHead(view);
         } else if (viewType == -2) {
             //返回尾巴
             View view = footView;
@@ -99,14 +100,21 @@ public void setHeadView(View headView1){
 
     }
 
+
     @Override
     public int getItemCount() {
         return mList.size();
     }
-
+    class SimpleViewHolderHead extends RecyclerView.ViewHolder {
+        public SimpleViewHolderHead(View itemView) {
+            super(itemView);
+        }
+    }
     class SimpleViewHolder extends RecyclerView.ViewHolder {
+
         public SimpleViewHolder(View itemView) {
             super(itemView);
+
         }
     }
 }

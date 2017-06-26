@@ -5,7 +5,9 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
+import com.example.shibo.simplerecycleview.SonAdapter;
 import com.example.shibo.simplerecycleview.recycleview.MyUtils;
 import com.example.shibo.simplerecycleview.recycleview.SimpleRecycleviewAdater;
 
@@ -34,9 +36,20 @@ public class MRecycleviewAdapter extends SimpleRecycleviewAdater{
         }
     }
 
+    @Override
+    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+        super.onBindViewHolder(holder, position);
+    if(mList.get(position).getBeanType()==1){
+        MyViewHolder myViewHold= (MyViewHolder) holder;
+        myViewHold.textView.setText("第"+position+"位置数据");
+    }
+    }
+
     class MyViewHolder extends RecyclerView.ViewHolder{
+        TextView textView;
         public MyViewHolder(View itemView) {
             super(itemView);
+            textView= (TextView) itemView.findViewById(com.example.shibo.simplerecycleview.R.id.text);
         }
     }
 }

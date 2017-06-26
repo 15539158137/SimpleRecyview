@@ -1,25 +1,45 @@
 package com.example.shibo.simplerecycleview.recycleview;
 
+import android.animation.Animator;
+import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.animation.Animation;
 import android.widget.AbsListView;
+import android.widget.Toast;
 
 import com.example.shibo.simplerecycleview.simplebean.SimpleBean;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by shibo on 2017/6/22.
  */
 
 public class SimpleRecycleview extends RecyclerView {
+    boolean isNeedDelete;
+    //设置数据
+    List<SimpleBean> mList;
+    Handler mHandle;
+    //停止动画指令过来时候的当前时间
+    long needStopTime;
+
+    //当前系统时间
+    long currentTime;
+    //这个是动画
+    ValueAnimator valueAnimator;
+
+
     OnScrollChanListener onScrollChanListener;
 
     public void setOnScrollChanListener(OnScrollChanListener onScrollChanListener) {
@@ -30,6 +50,8 @@ public class SimpleRecycleview extends RecyclerView {
         void onRefresh();
 
         void loadMore();
+
+        void onTimeOut();
     }
 
     //item之间的间距，这个属性必须拿到，他关系到空白区域填充item的个数
@@ -45,6 +67,12 @@ public class SimpleRecycleview extends RecyclerView {
     public SimpleRecycleview(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         this.addItemDecoration(new SimpleRecycleviewItemDe((int) (0.01 * MyUtils.getHeight(getContext()))));
+        mHandle = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+            }
+        };
     }
 
     public SimpleRecycleview(Context context, @Nullable AttributeSet attrs, int defStyle) {
@@ -90,7 +118,6 @@ public class SimpleRecycleview extends RecyclerView {
 
         //this.getChildAt(0)
         SimpleRecycleviewAdater simpleRecycleviewAdater1 = (SimpleRecycleviewAdater) this.getAdapter();
-        Log.i("recycleview的总高度和单个的高度", this.getHeight() + "==" + MyUtils.getHeight(getContext()));
         int height = this.getHeight();
         if (simpleRecycleviewAdater1.mList.size() == 0) {
             //一个数据都没有，呢么就需要添加height/itemheiget个数据
@@ -101,7 +128,6 @@ public class SimpleRecycleview extends RecyclerView {
                     / (0.1 * MyUtils.getHeight(getContext()) + itemDeco)) - 1;
         }
         needAddCount = needReturn;
-        Log.i("最开始计算出来的个数", needAddCount + "==");
     }
 
     //这是对滑动事件的处理
@@ -112,48 +138,137 @@ public class SimpleRecycleview extends RecyclerView {
     //这个变量，表示已经得到刷新的状态了，不需要重复 了
     boolean isWorking;
 
-    public void stopRresh() {
+    //开始刷新的动画
+    public void refreshAni() {
+        currentTime = System.currentTimeMillis();
         final SimpleRecycleviewAdater simpleRecycleviewAdater1 = (SimpleRecycleviewAdater) this.getAdapter();
-        if (isRefresh) {
-            final RecyclerView recyclerView=this;
-            Log.e("走到刷新的方法","走到刷新的方法");
-            ValueAnimator valueAnimator=ValueAnimator.ofInt(0,100);
-            valueAnimator.setDuration(1000);
-            valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                @Override
-                public void onAnimationUpdate(ValueAnimator animation) {
-                    if((int)animation.getAnimatedValue()==100){
-                        //删除数据
-                         simpleRecycleviewAdater1.mList.remove(0);
-                      recyclerView.getAdapter().notifyDataSetChanged();
-                    }
-                }
-            });
-            valueAnimator.start();
-//            //删除最后一个item
-           // simpleRecycleviewAdater1.mList.remove(0);
-//            this.getAdapter().notifyDataSetChanged();
-        }
-    }
+        final RecyclerView recyclerView = this;
+        valueAnimator = ValueAnimator.ofInt(0, 20000);
+        valueAnimator.setDuration(20000);
+        valueAnimator.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
 
-    public void stopLoadMore() {
-        SimpleRecycleviewAdater simpleRecycleviewAdater1 = (SimpleRecycleviewAdater) this.getAdapter();
-        if (isLoadMore) {
-            Log.i("加载的抬起操作", "加载的抬起操作");
-            //删除最后一个item
-            simpleRecycleviewAdater1.mList.remove(simpleRecycleviewAdater1.mList.size() - 1);
-            Log.i("加载抬起操作后的长度", simpleRecycleviewAdater1.mList.size() + "===");
-            //还有resturnconunt个需要删除;用来删除空白的
-//由于此时recycleview中已经被充满了空白item，再调用resturnNeedAdd方法 返回的count会是0，这样就出现错误
-            Log.i("需要添加的数量", needAddCount + "==");
-            for (int i = 0; i < needAddCount; i++) {
-                simpleRecycleviewAdater1.mList.remove(simpleRecycleviewAdater1.mList.size() - 1);
             }
-            Log.i("加载抬起操作后的长度1", simpleRecycleviewAdater1.mList.size() + "===1");
-            this.getAdapter().notifyDataSetChanged();
-        }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                //删除数据
+                if (isNeedDelete) {
+                    simpleRecycleviewAdater1.mList.clear();
+                    simpleRecycleviewAdater1.mList.addAll(mList);
+                    recyclerView.getAdapter().notifyDataSetChanged();
+                    currentTime = 0;
+                    needStopTime = 0;
+                    isNeedDelete = false;
+                }
+
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                if ((needStopTime - currentTime) / 1000 < 2) {
+                    //小于两秒,等待2秒
+                    mHandle.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            isNeedDelete = true;
+                            valueAnimator.end();
+
+                        }
+                    }, 1500);
+                    isNeedDelete = false;
+                } else {
+                    isNeedDelete = true;
+                    valueAnimator.end();
+
+                }
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+
+            }
+        });
+        valueAnimator.start();
+
+
     }
 
+    //开始加载的动画
+    public void loadMoreAni() {
+        currentTime = System.currentTimeMillis();
+        final SimpleRecycleviewAdater simpleRecycleviewAdater1 = (SimpleRecycleviewAdater) this.getAdapter();
+
+        final RecyclerView recyclerView = this;
+        valueAnimator = ValueAnimator.ofInt(0, 20000);
+        valueAnimator.setDuration(20000);
+        valueAnimator.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                //删除数据
+                if (isNeedDelete) {
+                    //删除最后一个item
+                    simpleRecycleviewAdater1.mList.remove(simpleRecycleviewAdater1.mList.size() - 1);
+                    //还有resturnconunt个需要删除;用来删除空白的
+                    for (int i = 0; i < needAddCount; i++) {
+                        Log.e("正在删除时候的长度", simpleRecycleviewAdater1.mList.size() + "第" + i + "次");
+                        simpleRecycleviewAdater1.mList.remove(simpleRecycleviewAdater1.mList.size() - 1);
+                    }
+                    recyclerView.getAdapter().notifyDataSetChanged();
+
+                    simpleRecycleviewAdater1.mList.clear();
+                    simpleRecycleviewAdater1.mList.addAll(mList);
+                    needStopTime = 0;
+                    currentTime = 0;
+                    isNeedDelete = false;
+                }
+
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                //需要去关闭
+                if ((needStopTime - currentTime) / 1000 < 2) {
+//小于两秒,等待2秒
+                    isNeedDelete = false;
+                    mHandle.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            isNeedDelete = true;
+                            valueAnimator.end();
+                        }
+                    }, 1500);
+
+                } else {
+                    isNeedDelete = true;
+                    valueAnimator.end();
+                }
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+
+            }
+        });
+        valueAnimator.start();
+
+    }
+
+    public void stopRefreshOrLoad(List mList) {
+        //需要关闭
+        needStopTime = System.currentTimeMillis();
+        this.mList = mList;
+        valueAnimator.cancel();
+
+
+    }
 
     //对比的高度
     @Override
@@ -174,44 +289,9 @@ public class SimpleRecycleview extends RecyclerView {
                 isRefresh = false;
                 isWorking = false;
                 break;
-//           case MotionEvent.ACTION_UP:
-////               isLoadMore = false;
-////               isRefresh = false;
-////               isWorking = false;
-////
-//                SimpleRecycleviewAdater simpleRecycleviewAdater1 = (SimpleRecycleviewAdater) this.getAdapter();
-//                //如果是加载更多
-//                if (isLoadMore) {
-//                    Log.i("加载的抬起操作", "加载的抬起操作");
-//                    isLoadMore = false;
-//                    isRefresh = false;
-//                    isWorking = false;
-//                    //删除最后一个item
-//                    simpleRecycleviewAdater1.mList.remove(simpleRecycleviewAdater1.mList.size() - 1);
-//                    Log.e("加载抬起操作后的长度", simpleRecycleviewAdater1.mList.size() + "===");
-//                    //还有resturnconunt个需要删除;用来删除空白的
-////由于此时recycleview中已经被充满了空白item，再调用resturnNeedAdd方法 返回的count会是0，这样就出现错误
-//                    Log.i("需要添加的数量", needAddCount + "==");
-//                    for (int i = 0; i < needAddCount; i++) {
-//                        simpleRecycleviewAdater1.mList.remove(simpleRecycleviewAdater1.mList.size() - 1);
-//                    }
-//                    Log.i("加载抬起操作后的长度1", simpleRecycleviewAdater1.mList.size() + "===1");
-//                    this.getAdapter().notifyDataSetChanged();
-//                }
-////刷新
-//                if (isRefresh) {
-//                    Log.i("刷新的抬起操作", "刷新的抬起操作");
-//                    isLoadMore = false;
-//                    isRefresh = false;
-//                    isWorking = false;
-//                    //删除最后一个item
-//                    simpleRecycleviewAdater1.mList.remove(0);
-//                    this.getAdapter().notifyDataSetChanged();
-//                }
-//                isLoadMore = false;
-//                isRefresh = false;
-//                isWorking = false;
-//               break;
+            //  case MotionEvent.ACTION_UP:
+
+            // break;
             case MotionEvent.ACTION_MOVE:
                 float nowY = e.getY();
                 SimpleRecycleviewAdater simpleRecycleviewAdater = (SimpleRecycleviewAdater) this.getAdapter();
@@ -224,7 +304,6 @@ public class SimpleRecycleview extends RecyclerView {
 
                     } else {
                         if (isToTop()) {
-                            Log.i("刷新的滑动操作", "刷新的滑动操作");
                             isWorking = true;
                             isLoadMore = false;
                             isRefresh = true;
@@ -232,13 +311,17 @@ public class SimpleRecycleview extends RecyclerView {
                             SimpleBean simpleBean = new SimpleBean();
                             SimpleBean bean = new SimpleBean();
                             bean.setBeanType(-1);
+                            bean.setShowMessage("刷新中...");
                             simpleRecycleviewAdater.mList.add(bean);
                             Collections.reverse(simpleRecycleviewAdater.mList);
-                           this.getAdapter().notifyDataSetChanged();
+                            this.getAdapter().notifyDataSetChanged();
+                            this.scrollToPosition(0);
+                            Log.e("刷新时候的长度", simpleRecycleviewAdater.mList.size() + "===");
+                            refreshAni();
 //在这就去触发刷新的方法
                             if (onScrollChanListener == null) {
                             } else {
-                               onScrollChanListener.onRefresh();
+                                onScrollChanListener.onRefresh();
                             }
                         }
                     }
@@ -252,16 +335,14 @@ public class SimpleRecycleview extends RecyclerView {
 
                     } else {
                         if (isToBottom() == true) {
-
                             Log.i("加载的滑动操作", "加载的滑动操作");
                             isWorking = true;
                             isLoadMore = true;
                             isRefresh = false;
                             //需要给list的底部添加数据了
                             //需要给list的底部添加数据了
-
                             retrunNeedAddCount();
-                            Log.i("需要添加的数量前一个", needAddCount + "==");
+                            Log.e("需要添加的数量前一个", needAddCount + "==");
                             for (int i = 0; i < needAddCount; i++) {
                                 SimpleBean simpleBean = new SimpleBean();
                                 simpleBean.setBeanType(0);
@@ -270,10 +351,10 @@ public class SimpleRecycleview extends RecyclerView {
                             SimpleBean bean = new SimpleBean();
                             bean.setBeanType(-2);
                             simpleRecycleviewAdater.mList.add(bean);
-
-                            Log.i("加载滑动触发后的长度", simpleRecycleviewAdater.mList.size() + "===");
+                            Log.e("加载滑动触发后的长度", simpleRecycleviewAdater.mList.size() + "===");
                             this.getAdapter().notifyDataSetChanged();
                             this.scrollToPosition(simpleRecycleviewAdater.mList.size() - 1);
+                            loadMoreAni();
                             //去触发加载的方法了
                             if (onScrollChanListener == null) {
                             } else {

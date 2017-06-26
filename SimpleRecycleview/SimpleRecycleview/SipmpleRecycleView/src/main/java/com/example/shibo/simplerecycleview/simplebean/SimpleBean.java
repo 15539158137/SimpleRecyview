@@ -5,8 +5,17 @@ package com.example.shibo.simplerecycleview.simplebean;
  */
 
 public class SimpleBean {
+    String showMessage;
    //0表示是空白的  -1，-2表示是头和尾，1表示是正常的
     int beanType;
+
+    public String getShowMessage() {
+        return showMessage;
+    }
+
+    public void setShowMessage(String showMessage) {
+        this.showMessage = showMessage;
+    }
 
     public int getBeanType() {
         return beanType;
