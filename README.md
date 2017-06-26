@@ -1,4 +1,5 @@
 # SimpleRecyview
+#效果见于 show.gif
 ![](SimpleRecyview/show.gif)
 功能慢慢完善中的recycleview
 
