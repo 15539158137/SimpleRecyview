@@ -296,14 +296,16 @@ public class SimpleRecycleview extends RecyclerView {
                 float nowY = e.getY();
                 SimpleRecycleviewAdater simpleRecycleviewAdater = (SimpleRecycleviewAdater) this.getAdapter();
                 Log.i("是不是到顶部", isToTop() + "==");
+                //先判断到顶了
                 //新的比老的大，在上啦，加载更多
+                if (isToTop()) {
                 if ((nowY - startPointY) > MyUtils.getHeight(getContext()) * 0.1) {
                     //表示在下拉了
                     //下拉的同时，上啦无效
                     if (isWorking) {
 
                     } else {
-                        if (isToTop()) {
+
                             isWorking = true;
                             isLoadMore = false;
                             isRefresh = true;
@@ -328,13 +330,14 @@ public class SimpleRecycleview extends RecyclerView {
                 }
 
                 //新的比老的小，在下啦，刷新
+                if (isToBottom() == true) {
                 if ((nowY - startPointY) < -MyUtils.getHeight(getContext()) * 0.1) {
                     Log.i("是否滚动到底部了", isToBottom() + "==");
                     //表示在上拉了
                     if (isWorking) {
 
                     } else {
-                        if (isToBottom() == true) {
+
                             Log.i("加载的滑动操作", "加载的滑动操作");
                             isWorking = true;
                             isLoadMore = true;

@@ -41,11 +41,13 @@ public class MainActivity extends AppCompatActivity {
         }
         mList = new ArrayList<>();
         mRecycleviewAdapter = new MRecycleviewAdapter(mList, MainActivity.this);
+
         //设置item间距的方法
         recycleview.setItemDe((int) (MyUtils.getHeight(MainActivity.this) * 0.01));
         //自定义头部和底部的layout,里面需要传递一个view过去
         //  mRecycleviewAdapter.setHeadView(LayoutInflater.from(MainActivity.this).inflate(R.layout.activity_main, null));
         // mRecycleviewAdapter.setFootView(LayoutInflater.from(MainActivity.this).inflate(R.layout.activity_main, null));
+
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         recycleview.setLayoutManager(linearLayoutManager);
         recycleview.setAdapter(mRecycleviewAdapter);
@@ -55,7 +57,6 @@ public class MainActivity extends AppCompatActivity {
         recycleview.setOnScrollChanListener(new SimpleRecycleview.OnScrollChanListener() {
             @Override
             public void onRefresh() {
-                Log.e("刷新的方法", "刷新的方法");
                 if(newList.size()>0){
                     newList.remove(newList.size()-1);
                 }
@@ -65,14 +66,12 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void loadMore() {
-                Log.e("加载的方法", "加载的方法");
                 newList.add(new MyBean());
                 recycleview.stopRefreshOrLoad(newList);
             }
 
             @Override
             public void onTimeOut() {
-                Log.e("刷新时间超时","刷新超时");
             }
         });
 

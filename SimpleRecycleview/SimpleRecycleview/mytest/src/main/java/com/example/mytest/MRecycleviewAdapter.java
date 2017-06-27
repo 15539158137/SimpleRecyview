@@ -25,24 +25,26 @@ public class MRecycleviewAdapter extends SimpleRecycleviewAdater{
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         /*重写该方法，在viewType等于1的时候，写入自己的viewholder*/
-        if(viewType==1){
-            View view= LayoutInflater.from(mContext).inflate(R.layout.item,null);
-            RecyclerView.LayoutParams layoutParams=new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-            layoutParams.height= (int) (MyUtils.getHeight(mContext)*0.1);
+        if (viewType == 1) {
+            //这里返回你自己的viewholder
+            View view = LayoutInflater.from(mContext).inflate(R.layout.item, null);
+            RecyclerView.LayoutParams layoutParams = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+            layoutParams.height = (int) (MyUtils.getHeight(mContext) * 0.1);
             view.setLayoutParams(layoutParams);
             return new MyViewHolder(view);
-        }else {
-        return super.onCreateViewHolder(parent, viewType);
+        } else {
+            return super.onCreateViewHolder(parent, viewType);
         }
     }
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         super.onBindViewHolder(holder, position);
-    if(mList.get(position).getBeanType()==1){
-        MyViewHolder myViewHold= (MyViewHolder) holder;
-        myViewHold.textView.setText("第"+position+"位置数据");
-    }
+        if (mList.get(position).getBeanType() == 1) {
+            //其他照抄，下面的数据绑定写自己的
+            MyViewHolder myViewHold = (MyViewHolder) holder;
+            myViewHold.textView.setText("第" + position + "位置数据");
+        }
     }
 
     class MyViewHolder extends RecyclerView.ViewHolder{
