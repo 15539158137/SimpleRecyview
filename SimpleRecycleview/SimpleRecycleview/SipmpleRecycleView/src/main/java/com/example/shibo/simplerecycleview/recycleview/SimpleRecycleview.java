@@ -27,17 +27,18 @@ import java.util.List;
  */
 
 public class SimpleRecycleview extends RecyclerView {
-    boolean isNeedDelete;
+    private boolean haveNewData;//刷新和加载后是否有数据
+    private boolean isNeedDelete;//对于刷新状态的结束，使用anima.cancle；由于存在事件有没有两秒，所以需要加这个字段来判断是否真的需要让这个动画end
     //设置数据
     List<SimpleBean> mList;
     Handler mHandle;
     //停止动画指令过来时候的当前时间
-    long needStopTime;
+    private long needStopTime;
 
     //当前系统时间
-    long currentTime;
+    private long currentTime;
     //这个是动画
-    ValueAnimator valueAnimator;
+    private ValueAnimator valueAnimator;
 
 
     OnScrollChanListener onScrollChanListener;
@@ -51,7 +52,6 @@ public class SimpleRecycleview extends RecyclerView {
 
         void loadMore();
 
-        void onTimeOut();
     }
 
     //item之间的间距，这个属性必须拿到，他关系到空白区域填充item的个数
@@ -155,8 +155,13 @@ public class SimpleRecycleview extends RecyclerView {
             public void onAnimationEnd(Animator animation) {
                 //删除数据
                 if (isNeedDelete) {
-                    simpleRecycleviewAdater1.mList.clear();
-                    simpleRecycleviewAdater1.mList.addAll(mList);
+                    if (haveNewData) {
+                        haveNewData = false;
+                        simpleRecycleviewAdater1.mList.clear();
+                        simpleRecycleviewAdater1.mList.addAll(mList);
+                    } else {
+                        simpleRecycleviewAdater1.mList.remove(0);
+                    }
                     recyclerView.getAdapter().notifyDataSetChanged();
                     currentTime = 0;
                     needStopTime = 0;
@@ -214,17 +219,23 @@ public class SimpleRecycleview extends RecyclerView {
             public void onAnimationEnd(Animator animation) {
                 //删除数据
                 if (isNeedDelete) {
-                    //删除最后一个item
-                    simpleRecycleviewAdater1.mList.remove(simpleRecycleviewAdater1.mList.size() - 1);
-                    //还有resturnconunt个需要删除;用来删除空白的
-                    for (int i = 0; i < needAddCount; i++) {
-                        Log.e("正在删除时候的长度", simpleRecycleviewAdater1.mList.size() + "第" + i + "次");
+                    if (haveNewData) {
+                        simpleRecycleviewAdater1.mList.clear();
+                        simpleRecycleviewAdater1.mList.addAll(mList);
+                        haveNewData = false;
+                    } else {
+                        //删除最后一个item
                         simpleRecycleviewAdater1.mList.remove(simpleRecycleviewAdater1.mList.size() - 1);
+                        //还有resturnconunt个需要删除;用来删除空白的
+                        for (int i = 0; i < needAddCount; i++) {
+                            Log.e("正在删除时候的长度", simpleRecycleviewAdater1.mList.size() + "第" + i + "次");
+                            simpleRecycleviewAdater1.mList.remove(simpleRecycleviewAdater1.mList.size() - 1);
+                        }
                     }
+
                     recyclerView.getAdapter().notifyDataSetChanged();
 
-                    simpleRecycleviewAdater1.mList.clear();
-                    simpleRecycleviewAdater1.mList.addAll(mList);
+
                     needStopTime = 0;
                     currentTime = 0;
                     isNeedDelete = false;
@@ -261,7 +272,8 @@ public class SimpleRecycleview extends RecyclerView {
 
     }
 
-    public void stopRefreshOrLoad(List mList) {
+    public void stopRefreshOrLoad(List mList, boolean haveNewData) {
+        this.haveNewData = haveNewData;
         //需要关闭
         needStopTime = System.currentTimeMillis();
         this.mList = mList;
@@ -273,6 +285,7 @@ public class SimpleRecycleview extends RecyclerView {
     //对比的高度
     @Override
     public boolean onTouchEvent(MotionEvent e) {
+        super.onTouchEvent(e);
         switch (e.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 //获取下item的高度;设置itemheight的数值
@@ -293,18 +306,21 @@ public class SimpleRecycleview extends RecyclerView {
 
             // break;
             case MotionEvent.ACTION_MOVE:
+                //防止和recycleview自带的拖动出现冲突，加入对是否是用户滚动而到顶部或者是本来就在顶部的判断
+                //但是如果数据只有一页，呢么开始的时候就是在顶部和底部，对于用户是希望拖动还是滑动刷新还是不能进行判断
+                //所以当是下拉刷新或者上啦加载的recycleview暂不能进行拖拽的处理
                 float nowY = e.getY();
                 SimpleRecycleviewAdater simpleRecycleviewAdater = (SimpleRecycleviewAdater) this.getAdapter();
                 Log.i("是不是到顶部", isToTop() + "==");
                 //先判断到顶了
                 //新的比老的大，在上啦，加载更多
                 if (isToTop()) {
-                if ((nowY - startPointY) > MyUtils.getHeight(getContext()) * 0.1) {
-                    //表示在下拉了
-                    //下拉的同时，上啦无效
-                    if (isWorking) {
+                    if ((nowY - startPointY) > MyUtils.getHeight(getContext()) * 0.1) {
+                        //表示在下拉了
+                        //下拉的同时，上啦无效
+                        if (isWorking) {
 
-                    } else {
+                        } else {
 
                             isWorking = true;
                             isLoadMore = false;
@@ -331,12 +347,12 @@ public class SimpleRecycleview extends RecyclerView {
 
                 //新的比老的小，在下啦，刷新
                 if (isToBottom() == true) {
-                if ((nowY - startPointY) < -MyUtils.getHeight(getContext()) * 0.1) {
-                    Log.i("是否滚动到底部了", isToBottom() + "==");
-                    //表示在上拉了
-                    if (isWorking) {
+                    if ((nowY - startPointY) < -MyUtils.getHeight(getContext()) * 0.1) {
+                        Log.i("是否滚动到底部了", isToBottom() + "==");
+                        //表示在上拉了
+                        if (isWorking) {
 
-                    } else {
+                        } else {
 
                             Log.i("加载的滑动操作", "加载的滑动操作");
                             isWorking = true;
