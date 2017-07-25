@@ -8,7 +8,9 @@
 
 1.关于adapter;adapter中已经有变量mContext和数据集合mList,
 
-  //设置刷新和加载的监听
+//设置刷新和加载的监听
+
+ //设置刷新和加载的监听
 
         //使用时需注意，传入stopRefreshOrLoad（）的list，不能是adapter中的list，必须是一个其他的list
 
@@ -18,13 +20,17 @@
 
             public void onRefresh() {
 
-                if(newList.size()&gt;0){
+                //对于刷新和加载中传入的newlist可以是同一个list
 
-                    newList.remove(newList.size()-1);
+                if (newList.size() &gt; 0) {
+
+                    newList.remove(newList.size() - 1);
 
                 }
 
-                recycleview.stopRefreshOrLoad(newList);
+                //第二个参数的true和false，表示本次请求是否成功，拿到的数据是否是新的数据。false表示请求失败，数据没刷新，下同
+
+                recycleview.stopRefreshOrLoad(newList, false);
 
             }
 
@@ -34,21 +40,19 @@
 
                 newList.add(new MyBean());
 
-                recycleview.stopRefreshOrLoad(newList);
-
-            }
-
-            @Override
-
-            public void onTimeOut() {
+                recycleview.stopRefreshOrLoad(newList, true);
 
             }
 
         });
 
+    }
+
 间距和刷新加载布局的更改
 
- //设置item间距的方法
+//设置item间距的方法
+
+  //设置item间距的方法
 
         recycleview.setItemDe((int) (MyUtils.getHeight(MainActivity.this) \* 0.01));
 
@@ -57,6 +61,8 @@
         //  mRecycleviewAdapter.setHeadView(LayoutInflater.from(MainActivity.this).inflate(R.layout.activity\_main, null));
 
         // mRecycleviewAdapter.setFootView(LayoutInflater.from(MainActivity.this).inflate(R.layout.activity\_main, null));
+
+==
 
 2.关于adapter的使用
 
