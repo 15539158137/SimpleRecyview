@@ -64,9 +64,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onRefresh() {
                 //对于刷新和加载中传入的newlist可以是同一个list
-                if (newList.size() > 0) {
-                    newList.remove(newList.size() - 1);
-                }
+//                if (newList.size() > 0) {
+//                    newList.remove(newList.size() - 1);
+//                }
+                //第二个参数的true和false，表示本次请求是否成功，拿到的数据是否是新的数据。false表示请求失败，数据没刷新，下同
                 recycleview.stopRefreshOrLoad(newList, false);
 
             }

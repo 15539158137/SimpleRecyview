@@ -276,7 +276,10 @@ public class SimpleRecycleview extends RecyclerView {
         this.haveNewData = haveNewData;
         //需要关闭
         needStopTime = System.currentTimeMillis();
-        this.mList = mList;
+        if(haveNewData){
+
+            this.mList = mList;
+        }
         valueAnimator.cancel();
 
 
