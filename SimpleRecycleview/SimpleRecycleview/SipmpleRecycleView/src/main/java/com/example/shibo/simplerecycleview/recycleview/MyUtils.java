@@ -9,7 +9,7 @@ import android.view.WindowManager;
 
 public class MyUtils {
     public static int screenHeight;
-
+    public static boolean CanLoadDatas=true;
     public static  int getHeight(Context context){
     WindowManager wm = (WindowManager)
             context.getSystemService(Context.WINDOW_SERVICE);

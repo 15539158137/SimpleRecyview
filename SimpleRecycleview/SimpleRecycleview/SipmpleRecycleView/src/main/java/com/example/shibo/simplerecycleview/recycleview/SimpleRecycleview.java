@@ -18,6 +18,7 @@ import android.widget.Toast;
 
 import com.example.shibo.simplerecycleview.simplebean.SimpleBean;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -27,19 +28,14 @@ import java.util.List;
  */
 
 public class SimpleRecycleview extends RecyclerView {
-    private boolean haveNewData;//刷新和加载后是否有数据
-    private boolean isNeedDelete;//对于刷新状态的结束，使用anima.cancle；由于存在事件有没有两秒，所以需要加这个字段来判断是否真的需要让这个动画end
+    private boolean haveNewData;//刷新和加载后是否有数据，有数据就加载，没数据就删除因为刷新和加载而增加的数据
     //设置数据
     List<SimpleBean> mList;
     Handler mHandle;
     //停止动画指令过来时候的当前时间
     private long needStopTime;
-
     //当前系统时间
     private long currentTime;
-    //这个是动画
-    private ValueAnimator valueAnimator;
-
 
     OnScrollChanListener onScrollChanListener;
 
@@ -100,7 +96,6 @@ public class SimpleRecycleview extends RecyclerView {
 
     //判断是否到底部
     public boolean isToBottom() {
-
         if (this.computeVerticalScrollExtent() + this.computeVerticalScrollOffset()
                 >= this.computeVerticalScrollRange()) {
             return true;
@@ -114,9 +109,6 @@ public class SimpleRecycleview extends RecyclerView {
     //还需要考虑间隔的问题
     private void retrunNeedAddCount() {
         int needReturn;
-        //addItemDecoration
-
-        //this.getChildAt(0)
         SimpleRecycleviewAdater simpleRecycleviewAdater1 = (SimpleRecycleviewAdater) this.getAdapter();
         int height = this.getHeight();
         if (simpleRecycleviewAdater1.mList.size() == 0) {
@@ -132,235 +124,230 @@ public class SimpleRecycleview extends RecyclerView {
 
     //这是对滑动事件的处理
     float startPointY;
-    //下拉刷新，上啦加载
-    boolean isRefresh;
-    boolean isLoadMore;
-    //这个变量，表示已经得到刷新的状态了，不需要重复 了
-    boolean isWorking;
-
     //开始刷新的动画
     public void refreshAni() {
+        isRefreshNow=true;
         currentTime = System.currentTimeMillis();
-        final SimpleRecycleviewAdater simpleRecycleviewAdater1 = (SimpleRecycleviewAdater) this.getAdapter();
-        final RecyclerView recyclerView = this;
-        valueAnimator = ValueAnimator.ofInt(0, 20000);
-        valueAnimator.setDuration(20000);
-        valueAnimator.addListener(new Animator.AnimatorListener() {
-            @Override
-            public void onAnimationStart(Animator animation) {
-
-            }
-
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                //删除数据
-                if (isNeedDelete) {
-                    if (haveNewData) {
-                        haveNewData = false;
-                        simpleRecycleviewAdater1.mList.clear();
-                        simpleRecycleviewAdater1.mList.addAll(mList);
-                    } else {
-                        simpleRecycleviewAdater1.mList.remove(0);
-                    }
-                    recyclerView.getAdapter().notifyDataSetChanged();
-                    currentTime = 0;
-                    needStopTime = 0;
-                    isNeedDelete = false;
-                }
-
-            }
-
-            @Override
-            public void onAnimationCancel(Animator animation) {
-                if ((needStopTime - currentTime) / 1000 < 2) {
-                    //小于两秒,等待2秒
-                    mHandle.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            isNeedDelete = true;
-                            valueAnimator.end();
-
-                        }
-                    }, 1500);
-                    isNeedDelete = false;
-                } else {
-                    isNeedDelete = true;
-                    valueAnimator.end();
-
-                }
-
-            }
-
-            @Override
-            public void onAnimationRepeat(Animator animation) {
-
-            }
-        });
-        valueAnimator.start();
-
-
     }
 
     //开始加载的动画
     public void loadMoreAni() {
+        isRefreshNow=false;
         currentTime = System.currentTimeMillis();
-        final SimpleRecycleviewAdater simpleRecycleviewAdater1 = (SimpleRecycleviewAdater) this.getAdapter();
-
-        final RecyclerView recyclerView = this;
-        valueAnimator = ValueAnimator.ofInt(0, 20000);
-        valueAnimator.setDuration(20000);
-        valueAnimator.addListener(new Animator.AnimatorListener() {
-            @Override
-            public void onAnimationStart(Animator animation) {
-
-            }
-
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                //删除数据
-                if (isNeedDelete) {
-                    if (haveNewData) {
-                        simpleRecycleviewAdater1.mList.clear();
-                        simpleRecycleviewAdater1.mList.addAll(mList);
-                        haveNewData = false;
-                    } else {
-                        //删除最后一个item
-                        simpleRecycleviewAdater1.mList.remove(simpleRecycleviewAdater1.mList.size() - 1);
-                        //还有resturnconunt个需要删除;用来删除空白的
-                        for (int i = 0; i < needAddCount; i++) {
-                            Log.e("正在删除时候的长度", simpleRecycleviewAdater1.mList.size() + "第" + i + "次");
-                            simpleRecycleviewAdater1.mList.remove(simpleRecycleviewAdater1.mList.size() - 1);
-                        }
-                    }
-
-                    recyclerView.getAdapter().notifyDataSetChanged();
-
-
-                    needStopTime = 0;
-                    currentTime = 0;
-                    isNeedDelete = false;
-                }
-
-            }
-
-            @Override
-            public void onAnimationCancel(Animator animation) {
-                //需要去关闭
-                if ((needStopTime - currentTime) / 1000 < 2) {
-//小于两秒,等待2秒
-                    isNeedDelete = false;
-                    mHandle.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            isNeedDelete = true;
-                            valueAnimator.end();
-                        }
-                    }, 1500);
-
-                } else {
-                    isNeedDelete = true;
-                    valueAnimator.end();
-                }
-            }
-
-            @Override
-            public void onAnimationRepeat(Animator animation) {
-
-            }
-        });
-        valueAnimator.start();
-
     }
-
+    //由于遇到动画在某些情况下不能正常运行（提前终止），加入两外一个状态的处理，如果动画结束了，呢么就用handle去删除数据
+    boolean isRefreshNow;//现在是否是正在刷新的状态，这个变量用来区分如何删除数据
     public void stopRefreshOrLoad(List mList, boolean haveNewData) {
         this.haveNewData = haveNewData;
         //需要关闭
         needStopTime = System.currentTimeMillis();
         if(haveNewData){
-
             this.mList = mList;
         }
-        valueAnimator.cancel();
+        //开始去清除因为刷新和加载而新增的数据
+        deleteTheAddData();
 
+    }
+    /*删除因为刷新和加载而新增的虚拟数据*/
+    private void deleteTheAddData(){
+        if(isRefreshNow){
+            if ((needStopTime - currentTime) / 1000 < 2) {
+//小于两秒,等待2秒
+                if((needStopTime - currentTime) / 1000 < 0.5){
+                    mHandle.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {;
+                            // 0-0.5
+                            deleteTheRefreshData();
+                        }
+                    }, 1500);
+                }else if((needStopTime - currentTime) / 1000 < 1&&(needStopTime - currentTime) / 1000 >=0.5){
+                    mHandle.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            //0.5-1
+                            deleteTheRefreshData();
+                        }
+                    }, 1000);
+                } else if((needStopTime - currentTime) / 1000 >= 1&&(needStopTime - currentTime) / 1000 <1.5){
+                    mHandle.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            //1-1.5
+                            deleteTheRefreshData();
+                        }
+                    }, 500);
+                }else {
+                    //1.5-2
+                    deleteTheRefreshData();
+                }
+
+            } else {
+                //2
+                deleteTheRefreshData();
+            }
+        }else {
+            //需要去关闭
+            if ((needStopTime - currentTime) / 1000 < 2) {
+                if((needStopTime - currentTime) / 1000 < 0.5){
+                    mHandle.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            // 0-0.5
+                            deleteLoadMore();
+                        }
+                    }, 1500);
+                }else if((needStopTime - currentTime) / 1000 < 1&&(needStopTime - currentTime) / 1000 >=0.5){
+                    mHandle.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            //0.5-1
+                            deleteLoadMore();
+                        }
+                    }, 1000);
+                } else if((needStopTime - currentTime) / 1000 >= 1&&(needStopTime - currentTime) / 1000 <1.5){
+                    mHandle.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            //1-1.5
+                            deleteLoadMore();
+                        }
+                    }, 500);
+                }else {
+                    //大于1.5
+                    deleteLoadMore();
+                }
+
+            } else {
+                //大于等于2秒
+                deleteLoadMore();
+            }
+        }
+    }
+    /*删除加载的数据的方法*/
+    private void deleteLoadMore(){
+        RecyclerView recyclerView = this;
+        SimpleRecycleviewAdater simpleRecycleviewAdater1 = (SimpleRecycleviewAdater) this.getAdapter();
+        //删除数据
+        if (haveNewData) {
+            simpleRecycleviewAdater1.mList.clear();
+            //设置现在可以加载数据了
+            MyUtils.CanLoadDatas=true;
+            simpleRecycleviewAdater1.mList.addAll(mList);
+            haveNewData = false;
+        } else {
+            //删除最后一个item
+            simpleRecycleviewAdater1.mList.remove(simpleRecycleviewAdater1.mList.size() - 1);
+            //设置现在可以加载数据了
+            MyUtils.CanLoadDatas=true;
+            //还有resturnconunt个需要删除;用来删除空白的
+            for (int i = 0; i < needAddCount; i++) {
+                simpleRecycleviewAdater1.mList.remove(simpleRecycleviewAdater1.mList.size() - 1);
+            }
+        }
+        recyclerView.getAdapter().notifyDataSetChanged();
+        needStopTime = 0;
+        currentTime = 0;
+        //设置当前可以进行新的刷新和加载了
+        isRefreshOrLoading=false;
+
+    }
+    /*删除刷新而增加的数据的方法*/
+    private void deleteTheRefreshData(){
+        RecyclerView recyclerView = this;
+        SimpleRecycleviewAdater simpleRecycleviewAdater1 = (SimpleRecycleviewAdater) this.getAdapter();
+        //删除数据
+        if (haveNewData) {
+            haveNewData = false;
+            simpleRecycleviewAdater1.mList.clear();
+            simpleRecycleviewAdater1.mList.addAll(mList);
+            //设置现在可以加载数据了
+            MyUtils.CanLoadDatas=true;
+        } else {
+            simpleRecycleviewAdater1.mList.remove(0);
+            //设置现在可以加载数据了
+            MyUtils.CanLoadDatas=true;
+        }
+        recyclerView.getAdapter().notifyDataSetChanged();
+        currentTime = 0;
+        needStopTime = 0;
+        //设置当前可以进行新的刷新和加载了
+        isRefreshOrLoading=false;
 
     }
 
+    //给一个变量，这个变量表示：当前recycleview是否正在刷新或者加载，如果正在进行刷新或者加载，呢么就不去触犯新的刷新和加载，直到刷新和加载的动画结束或者用handle去清除
+    boolean isRefreshOrLoading;
     //对比的高度
     @Override
     public boolean onTouchEvent(MotionEvent e) {
         super.onTouchEvent(e);
+        if(isRefreshOrLoading){
+            return false;
+        }
         switch (e.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 //获取下item的高度;设置itemheight的数值
                 if (this.getChildAt(0) == null) {
-                    Log.i("第一个儿子为空", "=====");
                     itemHeight = (int) (0.1 * MyUtils.getHeight(getContext()));
                 } else {
                     itemHeight = this.getChildAt(0).getHeight();
                 }
-
-
                 startPointY = e.getY();
-                isLoadMore = false;
-                isRefresh = false;
-                isWorking = false;
                 break;
             //  case MotionEvent.ACTION_UP:
 
             // break;
             case MotionEvent.ACTION_MOVE:
-                //防止和recycleview自带的拖动出现冲突，加入对是否是用户滚动而到顶部或者是本来就在顶部的判断
-                //但是如果数据只有一页，呢么开始的时候就是在顶部和底部，对于用户是希望拖动还是滑动刷新还是不能进行判断
-                //所以当是下拉刷新或者上啦加载的recycleview暂不能进行拖拽的处理
                 float nowY = e.getY();
                 SimpleRecycleviewAdater simpleRecycleviewAdater = (SimpleRecycleviewAdater) this.getAdapter();
-                Log.i("是不是到顶部", isToTop() + "==");
                 //先判断到顶了
                 //新的比老的大，在上啦，加载更多
                 if (isToTop()) {
-                    if ((nowY - startPointY) > MyUtils.getHeight(getContext()) * 0.1) {
+                    if ((nowY - startPointY) > MyUtils.getHeight(getContext()) * 0.07) {
                         //表示在下拉了
                         //下拉的同时，上啦无效
-                        if (isWorking) {
-
+                        if (isRefreshOrLoading) {
+                            //正在加载数据中，不能再做其他操作了
                         } else {
-
-                            isWorking = true;
-                            isLoadMore = false;
-                            isRefresh = true;
-                            Collections.reverse(simpleRecycleviewAdater.mList);
-                            SimpleBean simpleBean = new SimpleBean();
+                            //设置现在不能加载数据
+                            MyUtils.CanLoadDatas=false;
+                            isRefreshOrLoading=true;
+                            //吧数据存储下，然后再设置，否则会很卡
+                            List tempList=new ArrayList();
+                            tempList.addAll(simpleRecycleviewAdater.mList);
+                            Collections.reverse(tempList);
                             SimpleBean bean = new SimpleBean();
                             bean.setBeanType(-1);
                             bean.setShowMessage("刷新中...");
-                            simpleRecycleviewAdater.mList.add(bean);
-                            Collections.reverse(simpleRecycleviewAdater.mList);
+                            tempList.add(bean);
+                            Collections.reverse(tempList);
+
+                            simpleRecycleviewAdater.mList.clear();
+                            simpleRecycleviewAdater.mList.addAll(tempList);
                             this.getAdapter().notifyDataSetChanged();
                             this.scrollToPosition(0);
-                            Log.e("刷新时候的长度", simpleRecycleviewAdater.mList.size() + "===");
                             refreshAni();
 //在这就去触发刷新的方法
                             if (onScrollChanListener == null) {
                             } else {
                                 onScrollChanListener.onRefresh();
                             }
+
                         }
                     }
                 }
 
                 //新的比老的小，在下啦，刷新
                 if (isToBottom() == true) {
-                    if ((nowY - startPointY) < -MyUtils.getHeight(getContext()) * 0.1) {
+                    if ((nowY - startPointY) < -MyUtils.getHeight(getContext()) * 0.07) {
                         Log.i("是否滚动到底部了", isToBottom() + "==");
-                        //表示在上拉了
-                        if (isWorking) {
-
+                        if (isRefreshOrLoading) {
+                            //正在加载数据中，不能再做其他操作了
                         } else {
-
-                            Log.i("加载的滑动操作", "加载的滑动操作");
-                            isWorking = true;
-                            isLoadMore = true;
-                            isRefresh = false;
+                            //设置现在不能加载数据
+                            MyUtils.CanLoadDatas=false;
+                            isRefreshOrLoading = true;
                             //需要给list的底部添加数据了
                             //需要给list的底部添加数据了
                             retrunNeedAddCount();
@@ -381,6 +368,7 @@ public class SimpleRecycleview extends RecyclerView {
                             if (onScrollChanListener == null) {
                             } else {
                                 onScrollChanListener.loadMore();
+
                             }
                         }
                     }

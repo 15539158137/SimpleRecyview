@@ -54,4 +54,5 @@ public class MRecycleviewAdapter extends SimpleRecycleviewAdater{
             textView= (TextView) itemView.findViewById(com.example.shibo.simplerecycleview.R.id.text);
         }
     }
+
 }
