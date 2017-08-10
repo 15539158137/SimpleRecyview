@@ -161,3 +161,6 @@
 5.注意点
 
 在回调中传入的list不能是adapter的list，必须实例化一个新的list;所有涉及个人的都必须判断beanType==1;
+6.对于item中耗时的操作的处理
+ 
+在给viewholder设置数据的时候，可以去判断MyUtils.canLoadDatas,如果为True的时候，再去加载你可能的耗时操作。
